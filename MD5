@@ -1,5 +1,5 @@
-85175d6abf883a81a597a935da25179d *DESCRIPTION
-7f8363172019a123e57fb0e76f344940 *NAMESPACE
+aa82dbc4f2bccf3993a8eefaedd463db *DESCRIPTION
+3c65b40b8931bd1eb89ab84deed22acf *NAMESPACE
 635f5e643b7fa8fd64f4033f86d6a279 *R/Evaluation.R
 6f1eb3af9e580d772b620a2546302f66 *R/Helpers.R
 db21d097fc18179233a16eb7dc5d623f *R/Metafunctions.R
@@ -62,7 +62,7 @@ ab4cb3d0c03ae97df72cabe62ca3a8d1 *man/MSE.Rd
 fcb5d6a7c26277127a8eff6b0631a59a *man/PL.Pairwise.Prob.Rd
 aaac0d6558b66d0f3f2e507f8dc7a723 *man/TVD.Rd
 9005d298af21abdb10faeace63876f3a *man/Visualization.Empirical.Rd
-95a6e9e21b56ec376236b4c88623718c *man/Visualization.MultiType.Rd
+ae0549c22cbf36de9ca5ef73b7d9a35d *man/Visualization.MultiType.Rd
 740594db9cd93decf47464a1fde5c751 *man/Visualization.Pairwise.Probabilities.Rd
 931a252ff0a7dc956c63196791ad51f8 *man/Visualization.RUMplots.Rd
 ec0b2b2cee1fad2028118c8ebae7bec0 *man/Zemel.Pairwise.Prob.Rd
@@ -73,4 +73,5 @@ b6784eece2a7f6cec7a26c2568d8e5ad *man/generateC.model.Rd
 f27da7698aa3ef656c68c7d4753130d8 *man/scores.to.order.Rd
 f7c3121abf1d29c81e590d4724feb5a9 *man/scramble.Rd
 4abdd820de37772f11dfd501601f0cfb *man/turn_matrix_into_table.Rd
-5a9a50ba372b32d08f59b5510d024f85 *tests/test-all.R
+324e13340b61683fed07a668c6f21471 *tests/testthat.R
+c1aa651f9678af34e8f6c4622c5593a6 *tests/testthat/tests.R

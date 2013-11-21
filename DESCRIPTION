@@ -2,7 +2,7 @@ Package: StatRank
 Type: Package
 Title: Statistical Rank Aggregation: Inference, Evaluation, and
         Visualization
-Version: 0.0.3
+Version: 0.0.4
 Date: 2013-11-21
 Author: Hossein Azari Soufiani, William Chen
 Maintainer: William Chen <williamzc@gmail.com>
@@ -16,7 +16,7 @@ Description: This package implements Generalized Method of Moments and Maximal
 License: GPL (>= 2)
 Imports: truncdist, plyr
 Suggests: ggplot2, gridExtra, grid, testthat, lattice
-Packaged: 2014-02-16 00:21:57 UTC; william
+Packaged: 2014-03-05 01:11:46 UTC; william
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2014-02-16 08:28:12
+Date/Publication: 2014-03-05 18:09:29
