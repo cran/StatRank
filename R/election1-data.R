@@ -4,9 +4,9 @@
 #' in the partial order are considered to be ranked lower than the lowest ranked
 #' alternative among mentioned alternatives.
 #'
-#' @name Data.Election
+#' @name Data.Election1
 #' @docType data
 #' @author Nicolaus Tideman
-#' @title A6 Election Data
-#' @usage data(Data.Election)
+#' @title A1 Election Data
+#' @usage data(Data.Election1)
 NULL

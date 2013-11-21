@@ -1,124 +1,28 @@
 # this is to get around issues with ggplot2 code not passing package checks
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("x", "y", "group", "column", "prob"))
-
-################################################################################
-# Calculating Pairwise Probabilities
-################################################################################
-
-
-# Pairwise Probability for PL Model
-# 
-# Given alternatives a and b (both items from the inference object)
-# what is the probaiblity that a beats b?
-# 
-# @param a list containing parameters for a
-# @param b list containing parameters for b
-# @return probability that a beats b
-# @export
-PL.Pairwise.Prob <- function(a, b) a$Mean / (a$Mean + b$Mean)
-
-# Pairwise Probability for Zemel
-# 
-# Given alternatives a and b (both items from the inference object)
-# what is the probaiblity that a beats b?
-# 
-# @param a list containing parameters for a
-# @param b list containing parameters for b
-# @return probability that a beats b
-# @export
-Zemel.Pairwise.Prob <- function(a, b){
-  # the means here are actually the scores
-  exp(a$Mean - b$Mean) / (exp(a$Mean - b$Mean) + exp(b$Mean - a$Mean))
-}
-
-# Pairwise Probability for Normal Model
-# 
-# Given alternatives a and b (both items from the inference object)
-# what is the probaiblity that a beats b?
-# 
-# @param a list containing parameters for a
-# @param b list containing parameters for b
-# @return probability that a beats b
-# @export
-Normal.Pairwise.Prob <- function(a, b) {
-  # Let W = X - Y
-  if(is.null(a[["Variance"]])) a$Variance <- 1
-  if(is.null(b[["Variance"]])) b$Variance <- 1
-  
-  mu <- a$Mean - b$Mean
-  sigma <- sqrt(a$Variance + b$Variance)
-  #P(X - Y > 0)
-  1 - pnorm(-mu/sigma)
-}
-
-# Pairwise Probability for Normal Multitype Model
-# 
-# Given alternatives a and b (both items from the inference object)
-# what is the probaiblity that a beats b?
-# 
-# @param a list containing parameters for a
-# @param b list containing parameters for b
-# @return probability that a beats b
-# @export
-Normal.MultiType.Pairwise.Prob <- function(a, b) {
-  mean.grid <- expand.grid(a$Mean, b$Mean)
-  variance.grid <- expand.grid(a$Variance, b$Variance)
-  gamma.grid <- expand.grid(a$Gamma, b$Gamma)
-  n <- nrow(mean.grid)
-  
-  probs <- rep(NA, n)
-  for(i in 1:n) {
-    probs[i] <- Normal.Pairwise.Prob(list(Mean = mean.grid[i, 1], Variance = variance.grid[i, 1]), list(Mean = mean.grid[i, 2], Variance = variance.grid[i, 2]))
-    probs[i] <- probs[i] * prod(gamma.grid[i, ])
-  }
-  sum(probs)
-}
-
-# Pairwise Probability for PL Multitype Model
-# 
-# Given alternatives a and b (both items from the inference object)
-# what is the probaiblity that a beats b?
-# 
-# @param a list containing parameters for a
-# @param b list containing parameters for b
-# @return probability that a beats b
-# @export
-Expo.MultiType.Pairwise.Prob <- function(a, b) {
-  mean.grid <- expand.grid(a$Mean, b$Mean)
-  n <- nrow(mean.grid)
-  
-  probs <- rep(NA, n)
-  for(i in 1:n) {
-    probs[i] <- PL.Pairwise.Prob(list(Mean = mean.grid[i, 1]), list(Mean = mean.grid[i, 2]))
-    probs[i] <- probs[i] * prod(mean.grid[i, ])
-  }
-  sum(probs)
-}
-
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("x", "y", "group", "column", "prob", "p", "m", "r"))
 
 ################################################################################
 # Visualize MultiType
 ################################################################################
 
-
 #' Multitype Random Utility visualizer
 #' 
 #' @param multitype.output output from a multitype fitter
+#' @param min left boundary of graphed x-axis
+#' @param max right boundary of graphed x-axis
 #' @param names names of alternatives
+#' @param ncol number of columns in final output
 #' @return none
 #' @export
 #' @examples
 #' library(ggplot2)
-#' library(grid)
+#' library(gridExtra)
 #' Data.Tiny <- matrix(c(1, 2, 3, 3, 2, 1, 1, 2, 3), ncol = 3, byrow = TRUE)
-#' multitype.output <- Estimation.RUM.MultiType.MLE(Data.Tiny, iter = 2, dist = "norm", ratio = .5)
-#' names <- 1:5
-#' plots <- visualize.MultiType(multitype.output, names)
-#' # the list of plots is appropriate for passing into the multiplot function at
-#' # http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
-#' # as input to the plotlist argument
-
-visualize.MultiType <- function(multitype.output, names) {
+#' multitype.output <- Estimation.RUM.MultiType.MLE(Data.Tiny, iter = 1, dist = "norm", ratio = .5)
+#' names <- 1:3
+#' #run the following code to make plots
+#' #plots <- Visualization.MultiType(multitype.output, -2, 2, names, 3)
+Visualization.MultiType <- function(multitype.output, min, max, names, ncol) {
   m <- dim(multitype.output$Mean)[2]
 
   process.MultiType <- function(output.of.multitype, m) {
@@ -126,7 +30,7 @@ visualize.MultiType <- function(multitype.output, names) {
     for(i in 1:m) {
       params[[i]] <- list()
       params[[i]]$Mean <- output.of.multitype$Mean[,i] - mean(output.of.multitype$Mean)
-      params[[i]]$SD <- output.of.multitype$SD[,i]
+      params[[i]]$SD <- sqrt(output.of.multitype$SD[,i])
       params[[i]]$Gamma <- output.of.multitype$Gamma[1,]
     }
     params
@@ -141,11 +45,10 @@ visualize.MultiType <- function(multitype.output, names) {
     sds <- parameters[[i]]$SD
     gammas <- parameters[[i]]$Gamma
     get.density <- function(x, weights) sum(dnorm(c(x, x), mean = means, sd = sds) * gammas * weights)
-    xs <- seq(-5, 5, by = 0.01)
+    xs <- seq(min, max, by = 0.01)
     df <- data.frame(x = rep(xs, 3))
     df$y <- c(sapply(xs, function(x) get.density(x, c(1, 1))), sapply(xs, function(x) get.density(x, c(1, 0))), sapply(xs, function(x) get.density(x, c(0, 1))))
     df$group <- rep(c(1, gammas), rep(length(xs), 3))
-        
     plots[[i]] <- ggplot(df, aes(x = x, y = y, linetype = factor(group), color = factor(group))) + 
       geom_line(size = linesize) + labs(title = names[i], x = NULL, y = NULL) + 
       geom_vline(xintercept = means[1], linetype = 2, size = linesize, color = "blue") + 
@@ -154,19 +57,12 @@ visualize.MultiType <- function(multitype.output, names) {
       scale_linetype_manual(values=c(6, 2, 1)) +
       theme(legend.position = "none")
   }
-  plots
+  do.call(grid.arrange, c(plots, ncol=ncol))
 }
 
 ################################################################################
 # Generating the Graphs
 ################################################################################
-
-convert.vector.to.list.of.means <- function(Estimate) {
-  m <- length(Estimate)
-  List <- rep(list(NA), m)
-  for(i in 1:m) List[[i]] <- list(Mean = Estimate[i])
-  List
-}
 
 #' Creates pairwise matrices to compare inference results with the empirical pairwise probabilities
 #' 
@@ -183,8 +79,8 @@ convert.vector.to.list.of.means <- function(Estimate) {
 #' Data.Test.pairs <- Breaking(Data.Test, "full")
 #' Parameters <- Estimation.PL.GMM(Data.Test.pairs, 5)$Parameters
 #' PL.Pairwise.Prob <- function(a, b) a$Mean / (a$Mean + b$Mean)
-#' Generate.Pairwise.Probabilities(Data.Test.pairs, Parameters, PL.Pairwise.Prob, "PL on Test Data")
-Generate.Pairwise.Probabilities <- function(Data.pairs, Parameters, get.pairwise.prob, name.of.method) {
+#' Visualization.Pairwise.Probabilities(Data.Test.pairs, Parameters, PL.Pairwise.Prob, "PL")
+Visualization.Pairwise.Probabilities <- function(Data.pairs, Parameters, get.pairwise.prob, name.of.method) {
   
   m <- max(Data.pairs[,c(1,2)])
   
@@ -200,8 +96,6 @@ Generate.Pairwise.Probabilities <- function(Data.pairs, Parameters, get.pairwise
   # calculate the empirical differences
   C.matrix.empirical <- generateC(Data.pairs, m)
   C.matrix.empirical.reordered <- C.matrix.empirical[reordering, reordering]
-  for(i in 1:(m-1)) for(j in (i+1):m) C.matrix.empirical.reordered[i, j] <- C.matrix.empirical.reordered[i, j] / (C.matrix.empirical.reordered[i, j] + C.matrix.empirical.reordered[j, i])
-  for(i in 2:m) for(j in 1:(i-1)) C.matrix.empirical.reordered[i, j] <- 0
   C.empirical <- turn_matrix_into_table(C.matrix.empirical.reordered)
   
   # calculate the model differences
@@ -246,8 +140,6 @@ Generate.Pairwise.Probabilities <- function(Data.pairs, Parameters, get.pairwise
   P <- C.empirical['prob'] / sum(C.empirical['prob'])
   Q <- C.model['prob'] / sum(C.model['prob'])
   
-  #bias <- mean(C.model[,3]) - mean(C.empirical[,3])
-  #l2.distance <- round(sqrt(sum((P - Q)^2)), 5)
   kl.divergence <- round(sum(log(P/Q)*P), 10)
   
   name.of.data <- tail(strsplit(deparse(substitute(Data.pairs)), "\\.")[[1]], n=1)
@@ -255,4 +147,119 @@ Generate.Pairwise.Probabilities <- function(Data.pairs, Parameters, get.pairwise
   
   grid.arrange(p1, p2, nrow = 1, main = textGrob(paste0("\n", name.of.data, "\nMethod: ", name.of.method, "\nKL divergence: ", kl.divergence, "\nEstimated Ranking: ", toString(reordering)), gp=gpar(cex=2)))
   
+}
+
+
+Visualization.Surfaceplots <- function(Data.pairs, m, Estimate, pairwise.prob = NA, prior = 0, ...) {
+  
+  C.model <- generateC.model(Estimate, pairwise.prob, ...)[Estimate$order, Estimate$order]  
+  C.empirical <- generateC(Data.pairs, m, prior = prior)[Estimate$order, Estimate$order]
+  
+  uppertriangle <- row(C.model) < col(C.model)
+  C.model[!uppertriangle] <- .5
+  C.empirical[!uppertriangle] <- .5
+  
+  C.model.df <- data.frame(z = as.numeric(C.model), x = as.numeric(row(C.model)), y = as.numeric(row(C.model)))
+  C.empirical.df <- data.frame(z = as.numeric(C.empirical), x = as.numeric(row(C.empirical)), y = as.numeric(row(C.empirical)))
+  C.diff.df <- data.frame(z = as.numeric(C.empirical - C.model), x = as.numeric(row(C.empirical)), y = as.numeric(row(C.empirical)))
+  
+  makewireframe <- function(df, ...) {
+    wireframe(z ~ x * y, data = df,
+              drape = TRUE,
+              colorkey = TRUE,
+              scales = list(arrows = FALSE, draw = FALSE),
+              xlab = NULL,
+              ylab = NULL,
+              zlab = NULL, 
+              screen = list(z = -45, x = -60),
+              par.settings = list(axis.line = list(col = "transparent")),
+              ...)
+  }
+  
+  p1 <- makewireframe(C.model.df, main = "Model         ", col.regions = rainbow(600), at = seq(.4, 1, by = .001), zlim = c(min(C.model, C.empirical), 1))
+  p2 <- makewireframe(C.empirical.df, main = "Empirical         ", col.regions = rainbow(600), at = seq(.4, 1, by = .001), zlim = c(min(C.model, C.empirical), 1))
+  p3 <- makewireframe(C.diff.df, main = "Difference         ", col.regions = c(cm.colors(500)), zlim = c(-.25, .25), at = seq(-.25, .25, by = .01))
+  grid.arrange(p1, p2, p3, nrow = 1)
+}
+
+#' RUMplot visualization
+#' 
+#' Creates marginal random utility density plots for each alternatives given an 
+#' Estimation object for a PL or Nonparameteric model
+#' 
+#' @param RUM choice of Exponential, Gumbel, or Nonparametric
+#' @param Estimate fitted RUM object
+#' @param min minimum x value to display
+#' @param max maximum x value to display
+#' @param ncol number of columns in the visualization
+#' @param names names of alternatives
+#' @export
+#' @examples
+#' library(ggplot2)
+#' library(gridExtra)
+#' Data.Tiny <- matrix(c(1, 2, 3, 3, 2, 1, 1, 2, 3), ncol = 3, byrow = TRUE)
+#' Estimate <- Estimation.PL.GMM(Breaking(Data.Tiny, method = "full"), m = 3)
+#' Visualization.RUMplots("Exponential", Estimate, names = 1:3)
+Visualization.RUMplots <- function(RUM = "Exponential", Estimate = NA, min = -5, max = 5, ncol= 5, names = NA) {
+  if(RUM == "Exponential") {
+    Visualization.RUMplots.Exponential(Estimate, min, max, ncol, names)
+  } else if(RUM == "Gumbel") {
+    Visualization.RUMplots.Gumbel(Estimate, min, max, ncol, names)
+  } else if(RUM == "Nonparametric") {
+    Visualization.RUMplots.Nonparametric(Estimate, max, ncol, names)
+  } else {
+    stop(paste("RUM", RUM, "not recognized.", sep = " "))
+  }
+}
+  
+Visualization.RUMplots.Exponential <- function(Estimate, min, max, ncol, names) {
+  m <- Estimate$m
+  x <- seq(min, max, by = (max - min) / 500)
+  plots <- llply(1:m, function(i) qplot(x, dexp(x, rate = 1/Estimate$Mean[i]), geom = "line") + labs(y = NULL, x = NULL, title = names[i]) + geom_vline(xintercept = Estimate$Mean[i], linetype = "dashed")) #+ scale_y_continuous(limits = c(0, 20))) 
+  do.call(grid.arrange, c(plots, ncol=ncol))
+}
+
+Visualization.RUMplots.Gumbel <- function(Estimate, min, max, ncol, names) {
+  m <- Estimate$m
+  x <- seq(min, max, by = (max - min) / 500)
+  means <- log(1/Estimate$Mean)
+  plots <- llply(1:m, function(i) qplot(x, dgumbel(x, location = means[i]), geom = "line", size = I(1)) + labs(y = NULL, x = NULL, title = names[i]) + geom_vline(xintercept = means[i], linetype = "dashed")) #+ scale_y_continuous(limits = c(0, 20))) 
+  do.call(grid.arrange, c(plots, ncol=ncol))
+
+}
+
+Visualization.RUMplots.Nonparametric <- function(Estimate, ymax, ncol, names) {
+  x.star <- seq(0, 1, len = 512)
+  m <- Estimate$m
+  plots <- llply(1:m, function(i) qplot(x.star, Estimate$rum.densities[[i]], geom = "line", size = I(1) ) + labs(y = NULL, x = NULL, title = rep(NULL, 10)[i]) + scale_y_continuous(limits = c(0, ymax)))
+  do.call(grid.arrange, c(plots, ncol=ncol))
+}
+
+#' RPD Visualization
+#' 
+#' Creates histograms of the empriical rank position distribution for each alternative
+#' in rank data
+#' 
+#' @param Data full, top partial, or sub partial data
+#' @param ymax maximum value of density to show on graph
+#' @param ncol number of columns visualization is displayed in
+#' @param names names of alternatives
+#' @export
+#' @examples
+#' library(ggplot2)
+#' library(gridExtra)
+#' data(Data.Test)
+#' Visualization.Empirical(Data.Test, 0.5)
+Visualization.Empirical <- function(Data, ymax, ncol = 5, names = NA) {
+  m <- ncol(Data)
+  empirical.plots <- list()
+  for(i in 1:m) {
+    temp <- data.frame(x = 1:m, y = colSums(Data==i))
+    temp$p <- temp$y / sum(temp$y)
+    empirical.plots[[i]] <- ggplot(temp, aes(x, p)) + geom_bar(stat = "identity") +
+      scale_x_reverse(breaks = seq(1, m, by = 1), labels = seq(1, m, by = 1)) +
+      ggtitle(names[i]) + labs(x = NULL, y = NULL) + scale_y_continuous(limits = c(0, ymax))
+  }
+  
+  do.call(grid.arrange, c(empirical.plots, ncol=ncol))
 }

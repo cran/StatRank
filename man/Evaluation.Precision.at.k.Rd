@@ -2,8 +2,7 @@
 \alias{Evaluation.Precision.at.k}
 \title{Calculates the Average Precision at k}
 \usage{
-  Evaluation.Precision.at.k(EstimatedRank, RelevanceLevel,
-    k)
+Evaluation.Precision.at.k(EstimatedRank, RelevanceLevel, k)
 }
 \arguments{
   \item{EstimatedRank}{estimated ranking}
@@ -13,10 +12,10 @@
   \item{k}{positive that we want to run this algorithm for}
 }
 \value{
-  The AP at k for this estimation and relevance level
+The AP at k for this estimation and relevance level
 }
 \description{
-  Calculates the Average Precision at k
+Calculates the Average Precision at k
 }
 \examples{
 EstimatedRank <- scramble(1:10)

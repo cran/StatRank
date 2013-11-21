@@ -1,9 +1,9 @@
-\name{Generate.Pairwise.Probabilities}
-\alias{Generate.Pairwise.Probabilities}
+\name{Visualization.Pairwise.Probabilities}
+\alias{Visualization.Pairwise.Probabilities}
 \title{Creates pairwise matrices to compare inference results with the empirical pairwise probabilities}
 \usage{
-  Generate.Pairwise.Probabilities(Data.pairs, Parameters,
-    get.pairwise.prob, name.of.method)
+Visualization.Pairwise.Probabilities(Data.pairs, Parameters, get.pairwise.prob,
+  name.of.method)
 }
 \arguments{
   \item{Data.pairs}{datas broken into pairs}
@@ -17,11 +17,11 @@
   \item{name.of.method}{names of the alternatives}
 }
 \value{
-  none
+none
 }
 \description{
-  Creates pairwise matrices to compare inference results
-  with the empirical pairwise probabilities
+Creates pairwise matrices to compare inference results with
+the empirical pairwise probabilities
 }
 \examples{
 library(ggplot2)
@@ -30,6 +30,6 @@ data(Data.Test)
 Data.Test.pairs <- Breaking(Data.Test, "full")
 Parameters <- Estimation.PL.GMM(Data.Test.pairs, 5)$Parameters
 PL.Pairwise.Prob <- function(a, b) a$Mean / (a$Mean + b$Mean)
-Generate.Pairwise.Probabilities(Data.Test.pairs, Parameters, PL.Pairwise.Prob, "PL on Test Data")
+Visualization.Pairwise.Probabilities(Data.Test.pairs, Parameters, PL.Pairwise.Prob, "PL")
 }
 

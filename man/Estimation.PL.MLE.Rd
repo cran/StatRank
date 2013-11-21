@@ -1,20 +1,21 @@
 \name{Estimation.PL.MLE}
 \alias{Estimation.PL.MLE}
-\title{Performs parameter estimation for a Random Utility Model using an MM algorithm}
+\title{Performs parameter estimation for the Plackett-Luce model using an Minorize Maximize algorithm}
 \usage{
-  Estimation.PL.MLE(Data, iter = 10)
+Estimation.PL.MLE(Data, iter = 10)
 }
 \arguments{
-  \item{Data}{data in either partial or full rankings}
+  \item{Data}{data in either partial or full rankings
+  (Partial rank case works for settings like car racing)}
 
   \item{iter}{number of MM iterations to run}
 }
 \value{
-  list of estimated means (Gamma) and the log likelihoods
+list of estimated means (Gamma) and the log likelihoods
 }
 \description{
-  Performs parameter estimation for a Random Utility Model
-  using an MM algorithm
+Performs parameter estimation for the Plackett-Luce model
+using an Minorize Maximize algorithm
 }
 \examples{
 data(Data.Test)

@@ -2,9 +2,11 @@
 \name{Data.Test}
 \alias{Data.Test}
 \title{Tiny test dataset}
-\description{
-  This is a randomly generated tiny ranks file that we can
-  use to test our methods
+\usage{
+data(Data.Test)
 }
-\keyword{datasets}
+\description{
+This is a randomly generated tiny ranks file that we can
+use to test our methods
+}
 
