@@ -15,7 +15,7 @@ scramble <- function(x) sample(x, length(x))
 
 #' Converts scores to a ranking
 #' 
-#' takes in vector of scores (with the largest score being the one most prefered)
+#' takes in vector of scores (with the largest score being the one most preferred)
 #' and returns back a vector of WINNER, SECOND PLACE, ... LAST PLACE
 #' 
 #' @param scores the scores (e.g. means) of a set of alternatives
@@ -33,7 +33,7 @@ scores.to.order <- function(scores) (1:length(scores))[order(-scores)]
 
 #' Converts a pairwise count matrix into a probability matrix
 #' 
-#' @param C original pairwise count matriix
+#' @param C original pairwise count matrix
 #' @return a pairwise probability matrix
 #' @export
 #' @examples
@@ -60,7 +60,7 @@ normalizeC <- function(C){
 #' @param m the total number of alternatives
 #' @param Zemel whether or not this function should use the rank differences 
 #' instead of indicators for when i beats j
-#' @param prior the intial "fake data" that you want to include in C. A prior 
+#' @param prior the initial "fake data" that you want to include in C. A prior 
 #' of 1 would mean that you initially "observe" that all alternatives beat all
 #' other alternatives exactly once.
 #' @return a Count matrix of how many times alternative i has beat alternative j
@@ -89,7 +89,7 @@ generateC <- function(Data.pairs, m, Zemel = FALSE, prior = 0) {
 
 #' Breaks full or partial orderings into pairwise comparisons
 #' 
-#' Given full or partial orderings, this function will generate pairwise comparise
+#' Given full or partial orderings, this function will generate pairwise comparison
 #' Options
 #' 1. full - All available pairwise comparisons. This is used for partial
 #' rank data where the ranked objects are a random subset of all objects
@@ -101,7 +101,7 @@ generateC <- function(Data.pairs, m, Zemel = FALSE, prior = 0) {
 #' alternatives are preferred over the non-ranked alternatives
 #' 
 #' @param Data data in either full or partial ranking format
-#' @param method - can be full, adjacent, top or top.patrixl
+#' @param method - can be full, adjacent, top or top.partial
 #' @param k This applies to the top method, choose which top k to focus on
 #' @return Pairwise breakings, where the three columns are winner, loser and rank distance (latter used for Zemel)
 #' @export

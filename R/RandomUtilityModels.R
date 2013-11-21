@@ -1,5 +1,3 @@
-# future - unify variables and names
-
 # @n stands for number of agents
 # @m stands for number of alternatives
 # @distribution can be Normal or Exponential
@@ -74,7 +72,7 @@ Generate.RUM.Ranks=function(parameter,m,n,distribution)
 # Model Likelihood
 ################################################################################
 
-#' A faster Likelihood for PL
+#' A faster Likelihood for Plackett-Luce Model
 #'
 #' @param Data ranking data
 #' @param parameter Mean of Exponential Distribution
@@ -110,7 +108,7 @@ pdfgumbel=function(x,mu)
   ;exp(-x+mu)*exp(-exp(-x+mu))
 }
 
-#' Likelihood for general RUM
+#' Likelihood for general Random Utility Models with different  noise distributions
 #'
 #' @param Data ranking data
 #' @param parameter Mean of Exponential Distribution
@@ -272,7 +270,7 @@ Likelihood.RUM <- function(Data, parameter, dist="exp",range=10,res=.1)
 ## MLE: MCEM( MCEM.Ag() )
 ################################################################################
 
-#' Performs parameter estimation for a Random Utility Model using an MM algorithm
+#' Performs parameter estimation for the Plackett-Luce model using an Minorize Maximize algorithm
 #' 
 #' @param Data data in either partial or full rankings
 #' @param iter number of MM iterations to run
@@ -366,7 +364,7 @@ Estimation.PL.MLE=function(Data, iter = 10)
 ## MCEM( MCEM.Ag() )
 ################################################################################
 
-#' Performs parameter estimation for a Random Utility Model
+#' Performs parameter estimation for a Random Utility Model with different noise distributions
 #' 
 #' This function supports RUMs 
 #' 1) Normal
@@ -688,7 +686,6 @@ Estimation.RUM.MultiType.MLE = function(Data, K=2, iter = 10, dist, ratio)
   #        #ll[j]=likelihoodPL(DataL,parameter)
   #      }
   
-  ### William's addition
   params <- rep(list(list()), m)
   for(i in 1:m) {
     params[[i]]$Mean <- Delta[,i]
@@ -704,13 +701,13 @@ Estimation.RUM.MultiType.MLE = function(Data, K=2, iter = 10, dist, ratio)
 
 
 
-#' The PDF of a set of independent normal random variables
-#' 
-#' 
-#' @param X vector of scalar values
-#' @param parameter list containing vetor of means for normal distributions, variances are set to one
-#' @return value of the PDF for vector X given the parameter
-#' @export
+# The PDF of a set of independent normal random variables
+# 
+# 
+# @param X vector of scalar values
+# @param parameter list containing vetor of means for normal distributions, variances are set to one
+# @return value of the PDF for vector X given the parameter
+# @export
 PdfModel = function(X,parameter)
 {
   m=length(X)
@@ -729,7 +726,7 @@ PdfModel = function(X,parameter)
 ## GMM
 ################################################################################
 
-#' GMM Method for PL Estimation
+#' GMM Method for estimating Plackett-Luce model parameters
 #' 
 #' @param Data.pairs data broken up into pairs
 #' @param m number of alternatives
@@ -760,7 +757,7 @@ Estimation.PL.GMM = function(Data.pairs, m, prior = 0)
   list(Mean = stationary.probability, Parameters = convert.vector.to.list.of.means(stationary.probability))
 }
 
-#' GMM Method for Normal RUM model Estimation
+#' GMM Method for Estimating Random Utility Model wih Normal dsitributions
 #' 
 #' @param Data.pairs data broken up into pairs
 #' @param m number of alternatives

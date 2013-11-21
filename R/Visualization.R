@@ -1,3 +1,4 @@
+# this is to get around issues with ggplot2 code not passing package checks
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("x", "y", "group", "column", "prob"))
 
 ################################################################################
