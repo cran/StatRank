@@ -1,4 +1,4 @@
 StatRank
 ========
 
-Version 0.0.3 in development
+Version 0.0.6 in development

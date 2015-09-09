@@ -69,7 +69,7 @@ densities.to.utilities <- function(rum.densities, Data, race = FALSE, utilities.
       for(i in (present+1):m + 1)
         utilities[i] <- uni.slice(utilities[i], function(x) log(RUFs(which.missing[i - present - 1], x)), upper = utilities[present + 1], lower = 0)
       if(j > GIBBSCONVERGENCE & j %% 2 == 0)
-        output <- rbind(output, data.frame(alternative = c(ranks, which.missing), utilities = utilities[c(-1, -(m+2))], agent = paste0(row, "-", j - GIBBSCONVERGENCE)))
+        output <- rbind(output, data.frame(alternative = c(ranks, which.missing), utilities = utilities[c(-1, -(m+2))], agent = paste0(row, "-", (j - GIBBSCONVERGENCE) / 2 )))
     }
     
     output
@@ -114,8 +114,8 @@ Estimation.RUM.Nonparametric <- function(Data, m, iter = 10, bw = 0.025, utiliti
   rum.densities <- replicate(m, rep(1, length(x.star)), simplify = FALSE)
   
   for(i in 1:iter) {
-    print(paste("ITERATION", i))
-    utilities     <- densities.to.utilities(rum.densities, Data, race = FALSE, utilities.per.agent) # MC E-Step
+    print(paste0("Iteration ", i, "/", iter))
+    utilities     <- densities.to.utilities(rum.densities, Data, race = race, utilities.per.agent) # MC E-Step
     rum.densities <- utilities.to.densities(utilities, m, bw = bw) # Variational M-Step
   }
   ordering <- order(-ddply(utilities, .(alternative), summarize, mean = mean(utilities))$mean)
@@ -241,10 +241,8 @@ Generate.NPRUM.Data <- function(Estimate, n, bw = 0.1) {
   u <- -Estimate$utilities.by.agent + rnorm(n = length(Estimate$utilities.by.agent), sd = bw)
   if(n < nrow(u)) {
     u <- u[sample(1:nrow(u), n, replace = FALSE), ]
-  } else if(n == nrow(u)) {
-    u <- u
-  } else {
+  } else if(n > nrow(u)) {
     u <- u[sample(1:nrow(u), n, replace = TRUE), ]
   }
-  t(apply(u, 1, order))
+  t(apply(u, 1, function(x) order(x, na.last = NA)))
 }

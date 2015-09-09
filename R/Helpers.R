@@ -159,6 +159,11 @@ generateC.model <- function(Estimate, get.pairwise.prob = NA, nonparametric = FA
 #' 4. top.partial - This is used for partial rank data where the ranked 
 #' alternatives are preferred over the non-ranked alternatives
 #' 
+#' The first column is the preferred alternative, and the second column is the
+#' less preferred alternative. The third column gives the rank distance between
+#' the two alternatives, and the fourth column enumerates the agent that the
+#' pairwise comparison came from.
+#' 
 #' @param Data data in either full or partial ranking format
 #' @param method - can be full, adjacent, top or top.partial
 #' @param k This applies to the top method, choose which top k to focus on
@@ -167,7 +172,7 @@ generateC.model <- function(Estimate, get.pairwise.prob = NA, nonparametric = FA
 #' @examples
 #' data(Data.Test)
 #' Data.Test.pairs <- Breaking(Data.Test, "full")
-Breaking <- function(Data, method, k = NULL) {
+Breaking <- function(Data, method = "full", k = NULL) {
   m <- ncol(Data)
   
   pair.full <- function(rankings) pair.top.k(rankings, length(rankings))
@@ -212,7 +217,9 @@ Breaking <- function(Data, method, k = NULL) {
     n <- nrow(Data)
     # applying a Filter(identity..., ) to each row removes all of the missing data
     # this is used in the case that only a partial ordering is provided
-    do.call(rbind, lapply(1:n, function(row) breakfunction(Filter(identity, Data[row, ]), ...)))
+    tmp <- do.call(rbind, lapply(1:n, function(row) cbind(breakfunction(Filter(identity, Data[row, ]), ...), row)))
+    colnames(tmp) <- c("V1", "V2", "distance", "agent")
+    tmp
   }
   
   if(method == "full") Data.pairs <- break.into(Data, pair.full)

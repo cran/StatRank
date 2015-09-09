@@ -57,12 +57,43 @@ Visualization.MultiType <- function(multitype.output, min, max, names, ncol) {
       scale_linetype_manual(values=c(6, 2, 1)) +
       theme(legend.position = "none")
   }
-  do.call(grid.arrange, c(plots, ncol=ncol))
+  do.call(gridExtra::grid.arrange, c(plots, ncol=ncol))
 }
 
 ################################################################################
 # Generating the Graphs
 ################################################################################
+
+Generate.Pairwise.Matrix.Plot <- function(C.matrix, m, title = "", minprob = 0, maxprob = 0, reordering = NULL, labels = NULL) {
+  base_size <- 15
+  
+  if(length(reordering) == 0) {
+    reordering <- 1:m
+  }
+  
+  if(length(labels) == 0) {
+    labels = reordering
+  }
+  
+  ggplot(C.matrix, aes(x = column, y = row)) +
+    geom_tile(aes(fill = prob), colour = "white") + geom_text(aes(label = paste0(round(prob * 100), "%")), size = base_size * 0.3, color = "white") +
+    scale_fill_gradient(limits = c(minprob, maxprob), breaks = c(0.5, 0.6, 0.7, 0.8, 0.9), low = "darkblue", high = "darkred", labels = function (x) paste0(round(x * 100), "%"), guide = "legend") +
+    labs(title = title, x = NULL, y = NULL, fill=NULL, size = base_size) + 
+    scale_x_discrete(expand = c(0, 0), breaks = 2:m, labels = labels[-1]) +
+    scale_y_reverse(breaks = 1:(m-1), labels = labels[-m]) +
+    theme_bw(base_size = base_size) + 
+    theme(legend.position = c(.15, .35), 
+          axis.ticks = element_blank(), 
+          panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text.y = element_text(color = "gray50"),
+          axis.text.x = element_text(color = "gray50", angle = 45, hjust=1),
+          legend.text = element_text(color = "gray50")
+    ) +
+    coord_fixed() + 
+    guides(fill = guide_legend(keywidth = 2.5, keyheight = 2.5))
+}
 
 #' Creates pairwise matrices to compare inference results with the empirical pairwise probabilities
 #' 
@@ -109,30 +140,6 @@ Visualization.Pairwise.Probabilities <- function(Data.pairs, Parameters, get.pai
   
   minprob <- min(C.empirical['prob'], C.model['prob'])
   maxprob <- max(C.empirical['prob'], C.model['prob'])
-      
-  
-  Generate.Pairwise.Matrix.Plot <- function(C.matrix, m, title, minprob, maxprob, reordering) {
-    base_size <- 15
-    
-    ggplot(C.matrix, aes(x = column, y = row)) +
-      geom_tile(aes(fill = prob), colour = "white") + geom_text(aes(label = paste0(round(prob * 100), "%")), size = base_size * 0.3, color = "white") +
-      scale_fill_gradient(limits = c(minprob, maxprob), breaks = c(0.5, 0.6, 0.7, 0.8, 0.9), low = "darkblue", high = "darkred", labels = function (x) paste0(round(x * 100), "%"), guide = "legend") +
-      labs(title = title, x = NULL, y = NULL, fill=NULL, size = base_size) + 
-      scale_x_discrete(expand = c(0, 0), breaks = 2:m, labels = reordering[-1]) +
-      scale_y_reverse(breaks = 1:(m-1), labels = reordering[-m]) +
-      theme_bw(base_size = base_size) + 
-      theme(legend.position = c(.15, .35), 
-            axis.ticks = element_blank(), 
-            panel.border = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            axis.text.y = element_text(color = "gray50"),
-            axis.text.x = element_text(color = "gray50"),
-            legend.text = element_text(color = "gray50")
-      ) +
-      coord_fixed() + 
-      guides(fill = guide_legend(keywidth = 2.5, keyheight = 2.5))
-  }
   
   p1 <- Generate.Pairwise.Matrix.Plot(C.empirical, m, "Empirical", minprob, maxprob, reordering)
   p2 <- Generate.Pairwise.Matrix.Plot(C.model, m, "Model", minprob, maxprob, reordering)
@@ -145,10 +152,23 @@ Visualization.Pairwise.Probabilities <- function(Data.pairs, Parameters, get.pai
   name.of.data <- tail(strsplit(deparse(substitute(Data.pairs)), "\\.")[[1]], n=1)
   
   
-  grid.arrange(p1, p2, nrow = 1, main = textGrob(paste0("\n", name.of.data, "\nMethod: ", name.of.method, "\nKL divergence: ", kl.divergence, "\nEstimated Ranking: ", toString(reordering)), gp=gpar(cex=2)))
+  gridExtra::grid.arrange(p1, p2, nrow = 1)
   
 }
 
+makewireframe <- function(df, ...) {
+  lattice::wireframe(z ~ x * y, data = df,
+            drape = TRUE,
+            colorkey = TRUE,
+            scales = list(arrows = FALSE, draw = FALSE),
+            xlab = NULL,
+            ylab = NULL,
+            zlab = NULL, 
+            zlim = c(.4, 1),
+            screen = list(z = -45, x = -60),
+            par.settings = list(axis.line = list(col = "transparent")),
+            ...)
+}
 
 Visualization.Surfaceplots <- function(Data.pairs, m, Estimate, pairwise.prob = NA, prior = 0, ...) {
   
@@ -163,23 +183,13 @@ Visualization.Surfaceplots <- function(Data.pairs, m, Estimate, pairwise.prob = 
   C.empirical.df <- data.frame(z = as.numeric(C.empirical), x = as.numeric(row(C.empirical)), y = as.numeric(row(C.empirical)))
   C.diff.df <- data.frame(z = as.numeric(C.empirical - C.model), x = as.numeric(row(C.empirical)), y = as.numeric(row(C.empirical)))
   
-  makewireframe <- function(df, ...) {
-    wireframe(z ~ x * y, data = df,
-              drape = TRUE,
-              colorkey = TRUE,
-              scales = list(arrows = FALSE, draw = FALSE),
-              xlab = NULL,
-              ylab = NULL,
-              zlab = NULL, 
-              screen = list(z = -45, x = -60),
-              par.settings = list(axis.line = list(col = "transparent")),
-              ...)
-  }
-  
-  p1 <- makewireframe(C.model.df, main = "Model         ", col.regions = rainbow(600), at = seq(.4, 1, by = .001), zlim = c(min(C.model, C.empirical), 1))
-  p2 <- makewireframe(C.empirical.df, main = "Empirical         ", col.regions = rainbow(600), at = seq(.4, 1, by = .001), zlim = c(min(C.model, C.empirical), 1))
-  p3 <- makewireframe(C.diff.df, main = "Difference         ", col.regions = c(cm.colors(500)), zlim = c(-.25, .25), at = seq(-.25, .25, by = .01))
-  grid.arrange(p1, p2, p3, nrow = 1)
+   if (requireNamespace("lattice", quietly = TRUE)) {
+     p1 <- makewireframe(C.model.df, main = "Model         ", col.regions = rainbow(600), at = seq(.4, 1, by = .001), zlim = c(min(C.model, C.empirical), 1))
+     p2 <- makewireframe(C.empirical.df, main = "Empirical         ", col.regions = rainbow(600), at = seq(.4, 1, by = .001), zlim = c(min(C.model, C.empirical), 1))
+     p3 <- makewireframe(C.diff.df, main = "Difference         ", col.regions = c(cm.colors(500)), zlim = c(-.25, .25), at = seq(-.25, .25, by = .01))
+     gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+   }
+
 }
 
 #' RUMplot visualization
@@ -216,7 +226,7 @@ Visualization.RUMplots.Exponential <- function(Estimate, min, max, ncol, names) 
   m <- Estimate$m
   x <- seq(min, max, by = (max - min) / 500)
   plots <- llply(1:m, function(i) qplot(x, dexp(x, rate = 1/Estimate$Mean[i]), geom = "line") + labs(y = NULL, x = NULL, title = names[i]) + geom_vline(xintercept = Estimate$Mean[i], linetype = "dashed")) #+ scale_y_continuous(limits = c(0, 20))) 
-  do.call(grid.arrange, c(plots, ncol=ncol))
+  do.call(gridExtra::grid.arrange, c(plots, ncol=ncol))
 }
 
 Visualization.RUMplots.Gumbel <- function(Estimate, min, max, ncol, names) {
@@ -224,15 +234,15 @@ Visualization.RUMplots.Gumbel <- function(Estimate, min, max, ncol, names) {
   x <- seq(min, max, by = (max - min) / 500)
   means <- log(1/Estimate$Mean)
   plots <- llply(1:m, function(i) qplot(x, dgumbel(x, location = means[i]), geom = "line", size = I(1)) + labs(y = NULL, x = NULL, title = names[i]) + geom_vline(xintercept = means[i], linetype = "dashed")) #+ scale_y_continuous(limits = c(0, 20))) 
-  do.call(grid.arrange, c(plots, ncol=ncol))
+  do.call(gridExtra::grid.arrange, c(plots, ncol=ncol))
 
 }
 
 Visualization.RUMplots.Nonparametric <- function(Estimate, ymax, ncol, names) {
   x.star <- seq(0, 1, len = 512)
   m <- Estimate$m
-  plots <- llply(1:m, function(i) qplot(x.star, Estimate$rum.densities[[i]], geom = "line", size = I(1) ) + labs(y = NULL, x = NULL, title = rep(NULL, 10)[i]) + scale_y_continuous(limits = c(0, ymax)))
-  do.call(grid.arrange, c(plots, ncol=ncol))
+  plots <- llply(1:m, function(i) qplot(x.star, Estimate$rum.densities[[i]], geom = "line", size = I(1) ) + labs(y = NULL, x = NULL, title = names[i]) + scale_y_continuous(limits = c(0, ymax)))
+  do.call(gridExtra::grid.arrange, c(plots, ncol=ncol))
 }
 
 #' RPD Visualization
@@ -261,5 +271,5 @@ Visualization.Empirical <- function(Data, ymax, ncol = 5, names = NA) {
       ggtitle(names[i]) + labs(x = NULL, y = NULL) + scale_y_continuous(limits = c(0, ymax))
   }
   
-  do.call(grid.arrange, c(empirical.plots, ncol=ncol))
+  do.call(gridExtra::grid.arrange, c(empirical.plots, ncol=ncol))
 }

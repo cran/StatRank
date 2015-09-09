@@ -1,5 +1,12 @@
 import("plyr")
 import("truncdist")
+import("ggplot2")
+
+importFrom("grDevices", "cm.colors", "rainbow")
+importFrom("stats", "cor", "density", "dexp", "dnorm", "glm.fit",
+         "pnorm", "rbinom", "reshape", "rexp", "rmultinom", "rnorm",
+         "runif")
+importFrom("utils", "tail")
 
 export(Breaking)
 export(Estimation.GRUM.MLE)
